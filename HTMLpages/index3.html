@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS S3 Static Website Hosting</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>AWS S3 Static Website Hosting</h1>
+        <p>Hosted on Amazon S3 with CloudFront CDN and SSL Certificate</p>
+    </header>
+
+    <section class="container">
+
+        <h2>Architecture Diagram</h2>
+
+        <div class="architecture">
+         <!--   <div class="box">Internet Users</div>
+            <div class="arrow">↓</div>
+            <div class="box">Route 53 (DNS)</div>
+            <div class="arrow">↓</div>
+            <div class="box">CloudFront Distribution (CDN + SSL/TLS)</div>
+            <div class="arrow">↓</div>
+            <div class="box">Amazon S3 Static Website</div>
+            <div class="arrow">↓</div>
+            <div class="box">HTML / CSS Files</div> -->
+            <img src="C:\Users\test\Documents\AWS\Website\staticwebsite.bandarkarami.com\AWS S3 Static Website_files\ArchitectureDiagram.png"
+             alt="AWS Static Website Architecture">
+        </div>
+
+        <h2>Services Used</h2>
+
+        <table>
+            <tr>
+                <th>Service</th>
+                <th>Purpose</th>
+            </tr>
+            <tr>
+                <td>Amazon S3</td>
+                <td>Store Static Website Files</td>
+            </tr>
+            <tr>
+                <td>CloudFront</td>
+                <td>Global CDN Delivery</td>
+            </tr>
+            <tr>
+                <td>Route 53</td>
+                <td>DNS Management</td>
+            </tr>
+            <tr>
+                <td>ACM</td>
+                <td>SSL/TLS Certificate</td>
+            </tr>
+            <tr>
+                <td>IAM</td>
+                <td>Access Control</td>
+            </tr>
+        </table>
+
+        <h2>Implementation Steps</h2>
+
+        <ol>
+            <li>Create an S3 Bucket named <strong>staticsite.bandarkarami.com</strong>.</li>
+            <li>Upload website files (index.html, css, images).</li>
+            <li>Enable Static Website Hosting.</li>
+            <li>Configure Bucket Policy for public access.</li>
+            <li>Create SSL Certificate using AWS Certificate Manager (ACM).</li>
+            <li>Create CloudFront Distribution.</li>
+            <li>Associate ACM Certificate with CloudFront.</li>
+            <li>Configure Route 53 records.</li>
+            <li>Access website using HTTPS.</li>
+        </ol>
+
+        <h2>Website URL</h2>
+
+        <p>
+            <a href="https://staticsite.bandarkarami.com" target="_blank">
+                https://staticsite.bandarkarami.com
+            </a>
+        </p>
+
+    </section>
+
+    <footer>
+        <p> Hosted By : Amit Bandarkar</p>
+    </footer>
+
+</body>
+</html>
