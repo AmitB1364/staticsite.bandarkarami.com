@@ -37,9 +37,10 @@ Bucket Name: staticsite.bandarkarami.com
 Region: ap-south-1 (Mumbai)
 
 Upload files
-index.html
-projects/
-images/
+index.html,
+
+projects/,
+
 
 Enable Static Website Hosting
 
