@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serverless File Upload Pipeline — Build Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F1A;
+    --bg-elevated:#121826;
+    --surface:#171F2E;
+    --surface-2:#1D263A;
+    --border:#26314A;
+    --text:#E7ECF5;
+    --text-dim:#8FA0BE;
+    --text-dimmer:#5C6B8A;
+    --amber:#E8A33D;
+    --amber-dim:#8A6A34;
+    --mint:#63D9A6;
+    --blue:#5B8DEF;
+    --radius:10px;
+    --maxw:760px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  code, .mono{font-family:'IBM Plex Mono', monospace;}
+
+  ::selection{background:var(--amber-dim); color:var(--text);}
+
+  a{color:var(--amber); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  a:focus-visible, button:focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    padding:88px 24px 64px;
+    max-width:1180px;
+    margin:0 auto;
+    border-bottom:1px solid var(--border);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--mint);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:22px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px; border-radius:50%;
+    background:var(--mint);
+    box-shadow:0 0 0 3px rgba(99,217,166,.18);
+  }
+  h1{
+    font-size:clamp(34px, 5vw, 54px);
+    line-height:1.08;
+    letter-spacing:-.02em;
+    margin:0 0 20px;
+    font-weight:700;
+    max-width:16ch;
+  }
+  h1 em{
+    font-style:normal;
+    color:var(--amber);
+  }
+  .lede{
+    font-size:18px;
+    color:var(--text-dim);
+    max-width:56ch;
+    margin:0 0 36px;
+  }
+  .stack-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;}
+  .chip{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    padding:6px 11px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--text-dim);
+    background:var(--bg-elevated);
+  }
+
+  /* ---------- Page shell ---------- */
+  .shell{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:250px 1fr;
+    gap:56px;
+    padding:56px 24px 120px;
+    align-items:start;
+  }
+
+  /* ---------- Rail nav (signature element) ---------- */
+  .rail{
+    position:sticky;
+    top:40px;
+    display:flex;
+    flex-direction:column;
+  }
+  .rail-title{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--text-dimmer);
+    margin-bottom:18px;
+  }
+  .rail-track{position:relative; padding-left:26px;}
+  .rail-line{
+    position:absolute; left:6px; top:6px; bottom:6px;
+    width:2px;
+    background:var(--border);
+  }
+  .rail-line-fill{
+    position:absolute; left:0; top:0; width:100%;
+    background:linear-gradient(var(--amber), var(--mint));
+    height:0%;
+    transition:height .25s ease;
+  }
+  .rail-item{
+    position:relative;
+    padding:9px 0;
+    display:block;
+    font-size:13.5px;
+    color:var(--text-dimmer);
+    transition:color .2s ease;
+  }
+  .rail-item::before{
+    content:"";
+    position:absolute; left:-26px; top:14px;
+    width:9px; height:9px; border-radius:50%;
+    background:var(--bg);
+    border:2px solid var(--border);
+    transition:all .2s ease;
+  }
+  .rail-item:hover{color:var(--text);}
+  .rail-item.active{color:var(--amber); font-weight:500;}
+  .rail-item.active::before{
+    border-color:var(--amber);
+    background:var(--amber);
+    box-shadow:0 0 0 4px rgba(232,163,61,.16);
+  }
+
+  /* ---------- Main content ---------- */
+  main{max-width:var(--maxw);}
+  section{margin-bottom:64px; scroll-margin-top:40px;}
+  section > .step-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--amber);
+    letter-spacing:.08em;
+    margin-bottom:10px;
+    display:block;
+  }
+  h2{
+    font-size:26px;
+    margin:0 0 14px;
+    letter-spacing:-.01em;
+    font-weight:600;
+  }
+  h3{
+    font-size:16px;
+    margin:28px 0 10px;
+    color:var(--text);
+    font-weight:600;
+  }
+  p{color:var(--text-dim); margin:0 0 14px; font-size:15.5px;}
+  ul, ol{color:var(--text-dim); font-size:15.5px; padding-left:22px;}
+  li{margin-bottom:6px;}
+  strong{color:var(--text); font-weight:600;}
+
+  .callout{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-left:2px solid var(--mint);
+    border-radius:6px;
+    padding:14px 18px;
+    font-size:14.5px;
+    color:var(--text-dim);
+    margin:18px 0;
+  }
+  .callout strong{color:var(--mint);}
+
+  /* ---------- Code blocks ---------- */
+  .code-block{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    overflow:hidden;
+    margin:16px 0 22px;
+  }
+  .code-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 16px;
+    border-bottom:1px solid var(--border);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color:var(--text-dimmer);
+  }
+  .code-head .dots{display:flex; gap:5px;}
+  .code-head .dots span{width:8px; height:8px; border-radius:50%; background:var(--border);}
+  pre{
+    margin:0; padding:18px 20px;
+    overflow-x:auto;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    line-height:1.65;
+    color:#C8D3E8;
+  }
+  .k{color:var(--blue);}
+  .s{color:var(--mint);}
+  .c{color:var(--text-dimmer); font-style:italic;}
+  .fn{color:var(--amber);}
+
+  /* ---------- Table ---------- */
+  table{width:100%; border-collapse:collapse; margin:16px 0 22px; font-size:14.5px;}
+  th, td{text-align:left; padding:11px 14px; border-bottom:1px solid var(--border);}
+  th{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-dimmer);
+    font-weight:500;
+  }
+  td{color:var(--text-dim);}
+  td strong{color:var(--text);}
+
+  /* ---------- Console mock ---------- */
+  .console{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    margin:16px 0 22px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+  }
+  .console-row{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px dashed var(--border);}
+  .console-row:last-child{border-bottom:none;}
+  .console-row .k2{color:var(--text-dimmer);}
+  .console-row .v2{color:var(--text);}
+  .status-ok{color:var(--mint); font-weight:500;}
+
+  /* ---------- Diagram ---------- */
+  .diagram-wrap{
+    background:var(--bg-elevated);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:28px;
+    margin-top:44px;
+  }
+  .diagram-wrap svg{width:100%; height:auto; display:block;}
+
+  /* ---------- Flow list ---------- */
+  .flow-list{list-style:none; padding:0; counter-reset:flow;}
+  .flow-list li{
+    counter-increment:flow;
+    position:relative;
+    padding-left:38px;
+    margin-bottom:14px;
+    color:var(--text-dim);
+  }
+  .flow-list li::before{
+    content:counter(flow);
+    position:absolute; left:0; top:0;
+    width:24px; height:24px;
+    border-radius:6px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--amber);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:36px 24px;
+    text-align:center;
+    color:var(--text-dimmer);
+    font-size:13px;
+    font-family:'IBM Plex Mono', monospace;
+  }
+
+  @media (max-width:860px){
+    .shell{grid-template-columns:1fr; gap:28px;}
+    .rail{position:static; padding-bottom:8px; border-bottom:1px solid var(--border); margin-bottom:8px;}
+    .rail-track{padding-left:0; display:flex; flex-wrap:wrap; gap:6px;}
+    .rail-line{display:none;}
+    .rail-item{padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12.5px;}
+    .rail-item::before{display:none;}
+    .rail-item.active{border-color:var(--amber);}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .rail-line-fill{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">Build guide · AWS</div>
+  <h1>A file lands in S3.<br>Its <em>metadata</em> lands in DynamoDB.<br>No server ever runs.</h1>
+  <p class="lede">A complete, presigned-URL upload pipeline built entirely from managed AWS services — API Gateway, Lambda, S3 and DynamoDB — wired together so the client talks to storage directly and the backend only ever handles metadata.</p>
+  <div class="stack-chips">
+    <span class="chip">Amazon S3</span>
+    <span class="chip">API Gateway</span>
+    <span class="chip">AWS Lambda · Python 3.13</span>
+    <span class="chip">DynamoDB</span>
+    <span class="chip">IAM</span>
+    <span class="chip">CloudWatch</span>
+  </div>
+</div>
+
+<div class="shell">
+  <nav class="rail">
+    <div class="rail-title">The pipeline</div>
+    <div class="rail-track">
+      <div class="rail-line"><div class="rail-line-fill" id="railFill"></div></div>
+      <a class="rail-item" data-target="overview" href="#overview">Overview</a>
+      <a class="rail-item" data-target="s3" href="#s3">1 · S3 bucket</a>
+      <a class="rail-item" data-target="dynamo" href="#dynamo">2 · DynamoDB table</a>
+      <a class="rail-item" data-target="iam" href="#iam">3 · IAM role</a>
+      <a class="rail-item" data-target="presign" href="#presign">4 · Presign Lambda</a>
+      <a class="rail-item" data-target="apigw" href="#apigw">5 · API Gateway</a>
+      <a class="rail-item" data-target="cors" href="#cors">6 · CORS</a>
+      <a class="rail-item" data-target="event" href="#event">7 · S3 event → metadata</a>
+      <a class="rail-item" data-target="getfiles" href="#getfiles">8 · Read the files</a>
+      <a class="rail-item" data-target="verify" href="#verify">9 · Verify end-to-end</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <section id="overview">
+      <span class="step-tag">// architecture</span>
+      <h2>How a request actually flows</h2>
+      <p>Six hops, three Lambda functions, zero servers to patch. The client never sends file bytes through the backend — it only ever asks for permission, then talks to S3 on its own.</p>
+
+      <ol class="flow-list">
+        <li>Users upload files through a <strong>web interface</strong>.</li>
+        <li>A Lambda function generates a <strong>presigned S3 URL</strong> and returns it.</li>
+        <li>The file uploads <strong>directly to S3</strong> using that presigned URL.</li>
+        <li>S3 emits an <strong>ObjectCreated</strong> event notification.</li>
+        <li>The <strong>SaveMetadata</strong> Lambda reads the object's metadata and stores it in <strong>DynamoDB</strong>.</li>
+        <li>The client calls <strong>GET /files</strong> to read back everything that's been uploaded.</li>
+      </ol>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 680 520" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M2 1L8 5L2 9" fill="none" stroke="#5C6B8A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </marker>
+          </defs>
+          <text x="140" y="46" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8FA0BE">presigned upload</text>
+          <path d="M250,58 L30,58 L30,300 L70,300" fill="none" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="250" y="36" width="180" height="44" rx="8" fill="#171F2E" stroke="#26314A"/>
+          <text x="340" y="62" text-anchor="middle" fill="#E7ECF5" font-family="IBM Plex Sans" font-size="14" font-weight="600">User</text>
+
+          <line x1="340" y1="80" x2="340" y2="118" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="250" y="118" width="180" height="44" rx="8" fill="#1D263A" stroke="#5B8DEF"/>
+          <text x="340" y="144" text-anchor="middle" fill="#E7ECF5" font-family="IBM Plex Sans" font-size="14" font-weight="600">API Gateway</text>
+
+          <line x1="300" y1="162" x2="175" y2="200" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="380" y1="162" x2="505" y2="200" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="70" y="200" width="210" height="54" rx="8" fill="#1D263A" stroke="#E8A33D"/>
+          <text x="175" y="220" text-anchor="middle" fill="#E8A33D" font-family="IBM Plex Mono" font-size="12" font-weight="600">Lambda</text>
+          <text x="175" y="238" text-anchor="middle" fill="#C8D3E8" font-family="IBM Plex Mono" font-size="11.5">GenerateUploadURL</text>
+
+          <rect x="400" y="200" width="210" height="54" rx="8" fill="#1D263A" stroke="#E8A33D"/>
+          <text x="505" y="220" text-anchor="middle" fill="#E8A33D" font-family="IBM Plex Mono" font-size="12" font-weight="600">Lambda</text>
+          <text x="505" y="238" text-anchor="middle" fill="#C8D3E8" font-family="IBM Plex Mono" font-size="11.5">GetFiles</text>
+
+          <line x1="175" y1="254" x2="175" y2="294" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="70" y="294" width="210" height="44" rx="8" fill="#171F2E" stroke="#63D9A6"/>
+          <text x="175" y="320" text-anchor="middle" fill="#E7ECF5" font-family="IBM Plex Sans" font-size="13.5" font-weight="600">Amazon S3 bucket</text>
+
+          <text x="195" y="360" font-family="IBM Plex Mono, monospace" font-size="11" fill="#8FA0BE">ObjectCreated event</text>
+          <line x1="175" y1="338" x2="175" y2="378" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="70" y="378" width="210" height="54" rx="8" fill="#1D263A" stroke="#E8A33D"/>
+          <text x="175" y="398" text-anchor="middle" fill="#E8A33D" font-family="IBM Plex Mono" font-size="12" font-weight="600">Lambda</text>
+          <text x="175" y="416" text-anchor="middle" fill="#C8D3E8" font-family="IBM Plex Mono" font-size="11.5">SaveMetadata</text>
+
+          <line x1="200" y1="432" x2="290" y2="460" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+          <line x1="480" y1="254" x2="400" y2="460" stroke="#26314A" stroke-width="1.4" marker-end="url(#arrow)"/>
+
+          <rect x="230" y="460" width="220" height="44" rx="8" fill="#171F2E" stroke="#5B8DEF"/>
+          <text x="340" y="486" text-anchor="middle" fill="#E7ECF5" font-family="IBM Plex Sans" font-size="13.5" font-weight="600">DynamoDB · meofiles</text>
+        </svg>
+      </div>
+    </section>
+
+    <section id="s3">
+      <span class="step-tag">// step 01</span>
+      <h2>Create the S3 bucket</h2>
+      <p>The bucket is the landing zone for every uploaded file. Objects are namespaced under a single prefix so the bucket stays organized as it grows.</p>
+      <h3>Folder structure</h3>
+      <div class="console">
+        <div class="console-row"><span class="k2">bucket</span><span class="v2">meo-bucket-26</span></div>
+        <div class="console-row"><span class="k2">prefix</span><span class="v2">upload/</span></div>
+      </div>
+      <div class="callout"><strong>Bucket policy</strong> — objects are readable via a scoped <code>s3:GetObject</code> statement; write access is granted only through presigned URLs, never opened publicly.</div>
+    </section>
+
+    <section id="dynamo">
+      <span class="step-tag">// step 02</span>
+      <h2>Create the DynamoDB table</h2>
+      <p>One table stores a record per uploaded file, keyed by a generated ID rather than the filename — so two people can upload <code>report.pdf</code> without colliding.</p>
+      <div class="console">
+        <div class="console-row"><span class="k2">table name</span><span class="v2">meofiles</span></div>
+        <div class="console-row"><span class="k2">partition key</span><span class="v2">FileID (String)</span></div>
+        <div class="console-row"><span class="k2">status</span><span class="v2 status-ok">● active</span></div>
+      </div>
+    </section>
+
+    <section id="iam">
+      <span class="step-tag">// step 03</span>
+      <h2>Create the IAM execution role</h2>
+      <p>Every Lambda in this pipeline runs under a role scoped to exactly what it touches: object storage, the metadata table, and its own logs.</p>
+      <table>
+        <thead><tr><th>Policy</th><th>Grants</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AmazonS3FullAccess</strong></td><td>Read / write objects in the upload bucket</td></tr>
+          <tr><td><strong>AmazonDynamoDBFullAccess</strong></td><td>Read / write items in <code>meofiles</code></td></tr>
+          <tr><td><strong>CloudWatchLogsFullAccess</strong></td><td>Ship function logs for debugging</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="presign">
+      <span class="step-tag">// step 04</span>
+      <h2>Lambda: GenerateUploadURL</h2>
+      <p>This function never sees the file itself — it just signs a temporary <code>PUT</code> URL that lets the client write one specific object, for a limited window of time.</p>
+      <div class="code-block">
+        <div class="code-head"><span>generate_upload_url.py</span><div class="dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="k">import</span> json
+<span class="k">import</span> boto3
+<span class="k">from</span> botocore.client <span class="k">import</span> Config
+
+s3 = boto3.client(<span class="s">"s3"</span>, config=Config(signature_version=<span class="s">"s3v4"</span>))
+BUCKET = <span class="s">"meo-bucket-26"</span>
+
+<span class="k">def</span> <span class="fn">lambda_handler</span>(event, context):
+    filename = event[<span class="s">"queryStringParameters"</span>][<span class="s">"filename"</span>]
+    key = <span class="s">f"upload-files/{filename}"</span>
+
+    upload_url = s3.generate_presigned_url(
+        ClientMethod=<span class="s">"put_object"</span>,
+        Params={<span class="s">"Bucket"</span>: BUCKET, <span class="s">"Key"</span>: key},
+        ExpiresIn=<span class="fn">300</span>,
+        HttpMethod=<span class="s">"PUT"</span>,
+    )
+
+    <span class="k">return</span> {
+        <span class="s">"statusCode"</span>: <span class="fn">200</span>,
+        <span class="s">"headers"</span>: {<span class="s">"Access-Control-Allow-Origin"</span>: <span class="s">"*"</span>},
+        <span class="s">"body"</span>: json.dumps({<span class="s">"uploadURL"</span>: upload_url, <span class="s">"key"</span>: key}),
+    }</pre>
+      </div>
+      <div class="callout"><strong>Why 300 seconds</strong> — short-lived URLs limit the blast radius if one ever leaks in a log or a browser history.</div>
+    </section>
+
+    <section id="apigw">
+      <span class="step-tag">// step 05</span>
+      <h2>Wire up API Gateway</h2>
+      <p>A REST API with a single <code>/upload</code> resource, backed by Lambda proxy integration so the function receives the full request untouched.</p>
+      <table>
+        <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Endpoint type</td><td>Regional</td></tr>
+          <tr><td>Resource path</td><td><code>/upload</code></td></tr>
+          <tr><td>Method</td><td><code>GET</code>, Lambda proxy integration</td></tr>
+          <tr><td>Integration target</td><td><code>GenerateUploadURL</code></td></tr>
+        </tbody>
+      </table>
+      <div class="console">
+        <div class="console-row"><span class="k2">request</span><span class="v2">/upload?filename=test.pdf</span></div>
+        <div class="console-row"><span class="k2">status</span><span class="v2 status-ok">200 OK · 60ms</span></div>
+        <div class="console-row"><span class="k2">response</span><span class="v2">{ "uploadURL": "https://…", "key": "uploads/test.pdf" }</span></div>
+      </div>
+    </section>
+
+    <section id="cors">
+      <span class="step-tag">// step 06</span>
+      <h2>Enable CORS</h2>
+      <p>If the frontend is served from S3 or CloudFront, the browser will block the request without explicit CORS headers on both API Gateway and the bucket.</p>
+      <table>
+        <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Allowed origin</td><td><code>http://meo-bucket-26.s3-website-us-east-1.amazonaws.com</code></td></tr>
+          <tr><td>Allowed methods</td><td><code>GET</code>, <code>PUT</code>, <code>HEAD</code>, <code>OPTIONS</code></td></tr>
+          <tr><td>Allowed headers</td><td><code>Content-Type</code>, <code>Authorization</code></td></tr>
+        </tbody>
+      </table>
+      <p>Then deploy the API to a stage — creating it isn't enough, it has to be published before it's callable.</p>
+    </section>
+
+    <section id="event">
+      <span class="step-tag">// step 07</span>
+      <h2>S3 event → SaveMetadata Lambda</h2>
+      <p>The bucket's <code>ObjectCreated</code> event is wired to a second function, which reads the object's headers straight from S3 and persists them as a row in DynamoDB.</p>
+      <div class="code-block">
+        <div class="code-head"><span>save_metadata.py</span><div class="dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="k">import</span> json, boto3, uuid
+<span class="k">from</span> urllib.parse <span class="k">import</span> unquote_plus
+<span class="k">from</span> datetime <span class="k">import</span> datetime
+
+s3 = boto3.client(<span class="s">'s3'</span>)
+table = boto3.resource(<span class="s">'dynamodb'</span>).Table(<span class="s">'meofiles'</span>)
+
+<span class="k">def</span> <span class="fn">lambda_handler</span>(event, context):
+    <span class="k">for</span> record <span class="k">in</span> event[<span class="s">'Records'</span>]:
+        bucket = record[<span class="s">'s3'</span>][<span class="s">'bucket'</span>][<span class="s">'name'</span>]
+        key = unquote_plus(record[<span class="s">'s3'</span>][<span class="s">'object'</span>][<span class="s">'key'</span>])
+        head = s3.head_object(Bucket=bucket, Key=key)
+
+        table.put_item(Item={
+            <span class="s">"FieldID"</span>: <span class="fn">str</span>(uuid.uuid4()),
+            <span class="s">"FileName"</span>: key.split(<span class="s">"/"</span>)[-<span class="fn">1</span>],
+            <span class="s">"Bucket"</span>: bucket,
+            <span class="s">"ObjectKey"</span>: key,
+            <span class="s">"FileSize"</span>: head[<span class="s">"ContentLength"</span>],
+            <span class="s">"ContentType"</span>: head[<span class="s">"ContentType"</span>],
+            <span class="s">"UploadDate"</span>: datetime.utcnow().isoformat(),
+            <span class="s">"Status"</span>: <span class="s">"Uploaded"</span>,
+        })
+
+    <span class="k">return</span> {<span class="s">"statusCode"</span>: <span class="fn">200</span>, <span class="s">"body"</span>: <span class="s">"Metadata Saved"</span>}</pre>
+      </div>
+      <div class="callout"><strong>No polling</strong> — S3 invokes this function directly the moment an object lands. The permission for S3 to call Lambda is added automatically when the event notification is saved.</div>
+    </section>
+
+    <section id="getfiles">
+      <span class="step-tag">// step 08</span>
+      <h2>Lambda: GetFiles</h2>
+      <p>A read-only endpoint that scans the table and hands the frontend everything it needs to render an upload history — no separate database layer required.</p>
+      <div class="code-block">
+        <div class="code-head"><span>get_files.py</span><div class="dots"><span></span><span></span><span></span></div></div>
+        <pre><span class="k">import</span> json, boto3
+<span class="k">from</span> decimal <span class="k">import</span> Decimal
+
+table = boto3.resource(<span class="s">'dynamodb'</span>).Table(<span class="s">'meofiles'</span>)
+
+<span class="k">class</span> <span class="fn">DecimalEncoder</span>(json.JSONEncoder):
+    <span class="k">def</span> <span class="fn">default</span>(self, obj):
+        <span class="k">if</span> <span class="fn">isinstance</span>(obj, Decimal):
+            <span class="k">return</span> <span class="fn">int</span>(obj)
+        <span class="k">return</span> <span class="fn">super</span>().default(obj)
+
+<span class="k">def</span> <span class="fn">lambda_handler</span>(event, context):
+    response = table.scan()
+    <span class="k">return</span> {
+        <span class="s">"statusCode"</span>: <span class="fn">200</span>,
+        <span class="s">"headers"</span>: {<span class="s">"Access-Control-Allow-Origin"</span>: <span class="s">"*"</span>},
+        <span class="s">"body"</span>: json.dumps(response[<span class="s">"Items"</span>], cls=DecimalEncoder),
+    }</pre>
+      </div>
+      <p>Exposed as <code>GET /files</code> on the same API Gateway, so the whole pipeline lives behind two clean endpoints: one to write, one to read.</p>
+    </section>
+
+    <section id="verify">
+      <span class="step-tag">// step 09</span>
+      <h2>Verify the pipeline end-to-end</h2>
+      <p>With every piece wired up, the last step is confirming the full round trip from a real browser — upload, storage, and metadata — rather than trusting each Lambda in isolation.</p>
+
+      <h3>1 · Upload through the web interface</h3>
+      <p>A minimal frontend calls <code>GET /upload?filename=…</code>, receives the presigned URL, then <code>PUT</code>s the file straight to S3.</p>
+      <div class="console">
+        <div class="console-row"><span class="k2">action</span><span class="v2">Choose file → Upload</span></div>
+        <div class="console-row"><span class="k2">request</span><span class="v2">PUT presigned S3 URL</span></div>
+        <div class="console-row"><span class="k2">result</span><span class="v2 status-ok">✓ File uploaded successfully</span></div>
+      </div>
+
+      <h3>2 · Confirm the object landed in S3</h3>
+      <div class="console">
+        <div class="console-row"><span class="k2">bucket</span><span class="v2">meo-bucket-26</span></div>
+        <div class="console-row"><span class="k2">prefix</span><span class="v2">upload-files/</span></div>
+        <div class="console-row"><span class="k2">object</span><span class="v2 status-ok">● present</span></div>
+      </div>
+
+      <h3>3 · Confirm the metadata landed in DynamoDB</h3>
+      <div class="console">
+        <div class="console-row"><span class="k2">table</span><span class="v2">meofiles</span></div>
+        <div class="console-row"><span class="k2">item</span><span class="v2">FieldID, FileName, Bucket, ObjectKey, FileSize, ContentType, UploadDate</span></div>
+        <div class="console-row"><span class="k2">status</span><span class="v2 status-ok">Uploaded</span></div>
+      </div>
+
+      <div class="callout"><strong>What this proves</strong> — the browser never touched the backend to move bytes, yet the metadata table stays in perfect sync with what's actually sitting in the bucket, driven entirely by the S3 event.</div>
+    </section>
+
+  </main>
+</div>
+
+<footer>meofiles · presigned uploads on API Gateway, Lambda, S3 &amp; DynamoDB</footer>
+
+<script>
+  const items = document.querySelectorAll('.rail-item');
+  const sections = Array.from(items).map(i => document.getElementById(i.dataset.target));
+  const fill = document.getElementById('railFill');
+
+  function onScroll(){
+    let idx = 0;
+    const y = window.scrollY + 140;
+    sections.forEach((s, i) => { if (s && s.offsetTop <= y) idx = i; });
+    items.forEach(i => i.classList.remove('active'));
+    items[idx].classList.add('active');
+    if (fill) fill.style.height = ((idx) / (items.length - 1) * 100) + '%';
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+</script>
+
+</body>
+</html>

@@ -38,7 +38,7 @@ Region: ap-south-1 (Mumbai)
 
 Upload files
 index.html
-css/
+projects/
 images/
 
 Enable Static Website Hosting
